@@ -193,7 +193,7 @@ int main(int argc, char **argv)
 	FILE *fp = fopen(path, "w+");
 	fwrite(&map_table, sizeof(map_table), 1, fp);
 	
-	strcpy(t+1, "haf");
+	strcpy(t+1, "huf");
 	hfm_compress(argv[1], path);
 	
 	free(path);
