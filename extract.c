@@ -12,9 +12,7 @@ char match_item(int item, int *table)
 		if (table[i] == item)
 			return i;
 	}
-	
-	return -1;
-	
+	return -1;	
 }
 int find_min_level(int *table)
 {

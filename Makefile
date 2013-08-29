@@ -13,8 +13,9 @@ extract:$(etr:.c=.o)
 
 %.o:%.c
 	gcc $(CFLAGS) -c $< -o $@
-clean:
+cleanall:
 	-rm *.o compress extract
-
+clean:
+	-rm *.o
 .PHONY:clean all
 
