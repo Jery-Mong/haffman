@@ -142,7 +142,6 @@ int hfm_compress(char *input, char *output)
 {
 	FILE *rp = fopen(input, "r");
 	FILE *wp = fopen(output, "w+");
-	
 
 	char buf[BUF_SIZE];
 	memset(buf, 0, BUF_SIZE);
@@ -177,34 +176,27 @@ int hfm_compress(char *input, char *output)
 
 int main(int argc, char **argv)
 {
-	char *out_path = (char *)malloc(strlen(argv[1]));
-	char *tb_path = (char *)malloc(strlen(argv[1]));
-	
-	strcpy(out_path, argv[1]);
-	char *t = strrchr(out_path, '.');
-	strcpy(t + 1, "haf");
+	char *path = (char *)malloc(strlen(argv[1]));
+	strcpy(path, argv[1]);
+	char *t = strrchr(path, '.');
 
-	strcpy(tb_path, argv[1]);
-	t = strrchr(tb_path, '.');
-	strcpy(t + 1, "tb");
+	strcpy(path, argv[1]);
+	t = strrchr(path, '.');
 	
 	int *weight_tb = count_char_weight(argv[1]);
 	list_t *lst = weight_tb_to_list(weight_tb);
 	
 	struct tree_node *root = list_to_tree(lst);
 	tree_to_map_table(root);
-
 	
-
-	FILE *fp = fopen(tb_path, "w+");
+	strcpy(t+1, "tb");
+	FILE *fp = fopen(path, "w+");
 	fwrite(&map_table, sizeof(map_table), 1, fp);
-
-	hfm_compress(argv[1], out_path);
-
-
 	
-	free(tb_path);
-	free(out_path);
+	strcpy(t+1, "haf");
+	hfm_compress(argv[1], path);
+	
+	free(path);
 	return 0;
 }
 
