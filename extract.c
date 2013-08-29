@@ -36,11 +36,11 @@ void __hfm_extract(int *table, FILE *infp, FILE *outfp)
 	int ch_cnt = 0;
 	int min_level = find_min_level(table);
 	int code_cnt;
+	int item = 0;
 	
 	do {
 		code_cnt = fread(code_buf, 1, BUF_SIZE, infp);
 
-		int item = 0;
 		int i;
 		for (i = 0; i < code_cnt * 8; i++) {
 			if (code_buf[i / 8] & (1 << (i % 8)))
@@ -53,17 +53,19 @@ void __hfm_extract(int *table, FILE *infp, FILE *outfp)
 			
 			/* I assume match_item() always can find a corressponding char*/
 			char_buf[ch_cnt] = match_item(item, table);
-			
-			if (char_buf[ch_cnt] != '\0') {
-				if (ch_cnt == BUF_SIZE - 1) { /* buffer is full */
-					fwrite(char_buf, BUF_SIZE, 1, outfp);
-					ch_cnt = 0;
-					memset(char_buf, 0, BUF_SIZE);
-				}
-				ch_cnt++;
-			} else /* reach the end of the file */
+			if (char_buf[ch_cnt] >= 0) {
+				if (char_buf[ch_cnt] != '\0') {
+					item = 0;
+					ch_cnt++;
+					
+					if (ch_cnt == BUF_SIZE) { /* buffer is full */
+						fwrite(char_buf, BUF_SIZE, 1, outfp);
+						ch_cnt = 0;
+					}
+				} else /* reach the end of the file */
 				
-				fwrite(char_buf, ch_cnt, 1, outfp);
+					fwrite(char_buf, ch_cnt, 1, outfp);
+			}
 		}
 	} while(code_cnt == BUF_SIZE);
 }
@@ -92,7 +94,6 @@ int hfm_extract(char *in_path)
 	fclose(tp);
 
 	free(map_table);
-	
 	free(path);
 	
 	return 0;

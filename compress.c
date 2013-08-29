@@ -10,6 +10,8 @@
  */
 int map_table[128];
 
+#define BUF_SIZE 1024
+
 struct element {
 	int ch;
 	int weight;
@@ -30,46 +32,42 @@ int cmp_element(node_t *ln1, node_t *ln2)
 
 struct tree_node *list_to_tree(list_t *lst)
 {
-	node_t *ln1, *ln2, *ln3;
+	node_t *ln1, *ln2;
 	struct tree_node *tn1, *tn2, *tn3;
+	struct element *em;
 	
 	while (lst->node_cnt > 1) {
 		ln1 = list_del_tail(lst);
 		ln2 = list_del_tail(lst);
-
-		ln3 = (node_t *)malloc(sizeof(node_t));
-		ln3->data = malloc(sizeof(struct tree_node));
-		((struct tree_node *)(ln3->data))->data = malloc(sizeof(struct element));
+		
 
 		tn1 =(struct tree_node *)(ln1->data);
 		tn2 =(struct tree_node *)(ln2->data);
-		tn3 =(struct tree_node *)(ln3->data);
 
-		((struct element *)(tn3->data))->weight = ((struct element *)(tn1->data))->weight + ((struct element *)(tn2->data))->weight;
-		((struct element *)(tn3->data))->ch = -1;
-/*
+		tn3 = (struct tree_node *)malloc(sizeof(struct tree_node));
+		em  = (struct element *)malloc(sizeof(struct element));
 
-		printf("%d + %d = %d\n",
-		       ((struct element *)(tn1->data))->weight,
-		       ((struct element *)(tn2->data))->weight,
-		       ((struct element *)(tn3->data))->weight);
-*/		
+		em->weight = ((struct element *)(tn1->data))->weight + ((struct element *)(tn2->data))->weight;
+		em->ch = -1;
+
 		tn3->lchild = tn1;
 		tn3->rchild = tn2;
+		tn3->data = (void *)em;
 
-		free(ln1);
+		ln1->data = (void *)tn3;
+		
 		free(ln2);
-		list_sort_insert(lst, ln3, cmp_element);
+		list_sort_insert(lst, ln1, cmp_element);
 	}
 
-	ln3 = list_del_tail(lst);
-	tn3 = (struct tree_node *)(ln3->data);
+	ln1 = list_del_tail(lst);
+	tn1 = (struct tree_node *)(ln1->data);
 	
-	free(ln3);
+	free(ln1);
 	free(lst->head);
 	free(lst);
 	
-	return tn3;
+	return tn1;
 }
 void __tree_to_map_table(struct tree_node *parent, int level, int code)
 {
@@ -139,7 +137,7 @@ int *count_char_weight(char *path)
 //	fclose(fd);
 	return tb;
 }
-#define BUF_SIZE 1024
+
 int hfm_compress(char *input, char *output)
 {
 	FILE *rp = fopen(input, "r");
