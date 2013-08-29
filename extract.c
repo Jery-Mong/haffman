@@ -51,7 +51,6 @@ void __hfm_extract(int *table, FILE *infp, FILE *outfp)
 			if ((item & 0xff) < min_level)
 				continue;
 			
-			/* I assume match_item() always can find a corressponding char*/
 			char_buf[ch_cnt] = match_item(item, table);
 			if (char_buf[ch_cnt] >= 0) {
 				if (char_buf[ch_cnt] != '\0') {
@@ -62,8 +61,7 @@ void __hfm_extract(int *table, FILE *infp, FILE *outfp)
 						fwrite(char_buf, BUF_SIZE, 1, outfp);
 						ch_cnt = 0;
 					}
-				} else /* reach the end of the file */
-				
+				} else /* reach the end of the file */		
 					fwrite(char_buf, ch_cnt, 1, outfp);
 			}
 		}
