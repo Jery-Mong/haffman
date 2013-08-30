@@ -123,10 +123,8 @@ list_t *weight_tb_to_list(int *weight_tb)
 	return lst;
 }
 
-int *count_char_weight(char *path)
+int *count_char_weight(FILE *fd)
 {
-	FILE *fd = fopen(path, "r");
-
 	int *tb = (int *)malloc(sizeof(int)*128);
 	memset(tb, 0, sizeof(int)*128);
 	
@@ -134,22 +132,18 @@ int *count_char_weight(char *path)
 	while ((ch = fgetc(fd)) != EOF) {
 		tb[ch]++;
 	}
-//	fclose(fd);
 	return tb;
 }
 
-int hfm_compress(char *input, char *output)
+int hfm_compress(FILE *infp, FILE *outfp)
 {
-	FILE *rp = fopen(input, "r");
-	FILE *wp = fopen(output, "w+");
-
 	char buf[BUF_SIZE];
 	memset(buf, 0, BUF_SIZE);
 	
 	int ch, i;
 	int cnt = 0;
 	do {
-		if ((ch = fgetc(rp)) == EOF)
+		if ((ch = fgetc(infp)) == EOF)
 			ch = '\0';
 		
 		int code = map_table[ch] & 0xffffff00;
@@ -161,41 +155,46 @@ int hfm_compress(char *input, char *output)
 			cnt++;
 			
 			if (cnt == BUF_SIZE * 8) {
-				fwrite(buf, BUF_SIZE, 1, wp);
+				fwrite(buf, BUF_SIZE, 1, outfp);
 				cnt = 0;
 				memset(buf, 0, BUF_SIZE);
 			}
 		}
 	} while(ch != '\0');
 	
-	fwrite(buf, cnt / 8 + 1, 1, wp);
-	fclose(wp);
+	fwrite(buf, cnt / 8 + 1, 1, outfp);
 	
 	return 0;
 }
 
 int main(int argc, char **argv)
 {
+	FILE *infp = fopen(argv[1], "r");
+	if (infp == NULL) {
+		perror(argv[1]);
+		return -1;
+	}
+
 	char *path = (char *)malloc(strlen(argv[1]));
 	strcpy(path, argv[1]);
 	char *t = strrchr(path, '.');
+	strcpy(t+1, "huf");
 
-	strcpy(path, argv[1]);
-	t = strrchr(path, '.');
-	
-	int *weight_tb = count_char_weight(argv[1]);
+	int *weight_tb = count_char_weight(infp);
 	list_t *lst = weight_tb_to_list(weight_tb);
 	
 	struct tree_node *root = list_to_tree(lst);
 	tree_to_map_table(root);
 	
-	strcpy(t+1, "tb");
-	FILE *fp = fopen(path, "w+");
-	fwrite(&map_table, sizeof(map_table), 1, fp);
 	
-	strcpy(t+1, "huf");
-	hfm_compress(argv[1], path);
+	FILE *outfp = fopen(path, "w+");
+	fwrite(map_table, sizeof(map_table), 1, outfp);
 	
+	fseek(infp, 0, SEEK_SET);
+	hfm_compress(infp, outfp);
+	
+	fclose(infp);
+	fclose(outfp);
 	free(path);
 	return 0;
 }

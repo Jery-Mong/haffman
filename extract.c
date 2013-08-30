@@ -89,41 +89,41 @@ void __hfm_extract(int *table, FILE *infp, FILE *outfp)
 		}
 	} while(code_cnt == BUF_SIZE);
 }
-int hfm_extract(char *in_path)
+int hfm_extract(FILE *infp, FILE *outfp)
 {
-	char *path = (char *)malloc(strlen(in_path));
-        strcpy(path, in_path);
-	/* create map_table's path */
-	char * t = strrchr(path, '.');
-	strcpy(t+1, "tb");
-
+	
 	int *map_table = (int *)malloc(128 * sizeof(int));
-	FILE *tp = fopen(path, "r");
-	fread(map_table, 128*sizeof(int), 1, tp);
+	fread(map_table, 128*sizeof(int), 1, infp);
 
 	make_level_index_table(map_table);
 	
 	/* create output path */
-	strcpy(t + 1, "txt");
-
-	FILE *infp = fopen(in_path, "r");
-	FILE *outfp = fopen(path, "w+");
 
 	__hfm_extract(map_table, infp, outfp);
-
-	fclose(infp);
-	fclose(outfp);
-	fclose(tp);
-
+	
 	free(map_table);
-	free(path);
 	
 	return 0;
 }
 
-
 int main(int argc, char **argv)
-{	
-	hfm_extract(argv[1]);
+{
+	FILE *infp = fopen(argv[1], "r");
+	if (infp == NULL) {
+		perror(argv[1]);
+		return -1;
+	}
+
+	char *out_path = (char *)malloc(strlen(argv[1]));
+        strcpy(out_path, argv[1]);
+	strcpy(strrchr(out_path, '.') + 1, "txt");
+
+	FILE *outfp = fopen(out_path, "w+");
+	
+	hfm_extract(infp, outfp);
+
+	fclose(infp);
+	fclose(outfp);
+	free(out_path);
 	return 0;
 }
