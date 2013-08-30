@@ -4,16 +4,56 @@
 
 #define BUF_SIZE 1024
 
+int cnt = 0;
+
+char *level_indx_tb[24];
+/*
 char match_item(int item, int *table)
 {
 	int i;
 
-	for (i = 0; i < 128; i++) {
+	for (i = 127; i >=0; i--) {
+		cnt++;
 		if (table[i] == item)
 			return i;
 	}
 	return -1;	
+
 }
+*/
+
+char match_item(int item, int *table)
+{
+	int idx;
+
+	int i = 0;
+	while ((idx = level_indx_tb[item & 0xff][i++]) != -1) {
+		cnt++;
+		if (item == table[idx])
+			return idx;
+	}
+	return -1;
+}
+void make_level_index_table(int *map_table)
+{
+	int i, j;
+	int level_cnt;
+	char tp[128];
+
+	
+	for (i = 1; i < 24; i++) {
+		for (j = 128, level_cnt = 0; j >= 0 ; --j) {
+			if ((map_table[j] & 0xff) == i)
+				tp[level_cnt++] = j;
+		}
+
+		level_indx_tb[i] = (char *)malloc(level_cnt + 1);
+		memset(level_indx_tb[i], -1, level_cnt + 1);
+		memcpy(level_indx_tb[i], tp, level_cnt);
+	}
+		
+}
+
 int find_min_level(int *table)
 {
 	int i;
@@ -76,6 +116,8 @@ int hfm_extract(char *in_path)
 	int *map_table = (int *)malloc(128 * sizeof(int));
 	FILE *tp = fopen(path, "r");
 	fread(map_table, 128*sizeof(int), 1, tp);
+
+	make_level_index_table(map_table);
 	
 	/* create output path */
 	strcpy(t + 1, "txt");
@@ -94,9 +136,12 @@ int hfm_extract(char *in_path)
 	
 	return 0;
 }
+
+
 int main(int argc, char **argv)
 {	
 	hfm_extract(argv[1]);
-	
+
+	printf("%d\n", cnt);
 	return 0;
 }
