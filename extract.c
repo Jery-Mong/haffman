@@ -4,31 +4,15 @@
 
 #define BUF_SIZE 1024
 
-int cnt = 0;
-
 char *level_indx_tb[24];
-/*
-char match_item(int item, int *table)
-{
-	int i;
-
-	for (i = 127; i >=0; i--) {
-		cnt++;
-		if (table[i] == item)
-			return i;
-	}
-	return -1;	
-
-}
-*/
 
 char match_item(int item, int *table)
 {
 	int idx;
-
 	int i = 0;
-	while ((idx = level_indx_tb[item & 0xff][i++]) != -1) {
-		cnt++;
+	int level = item & 0xff;
+	
+	while ((idx = level_indx_tb[level][i++]) != -1) {
 		if (item == table[idx])
 			return idx;
 	}
@@ -141,7 +125,5 @@ int hfm_extract(char *in_path)
 int main(int argc, char **argv)
 {	
 	hfm_extract(argv[1]);
-
-	printf("%d\n", cnt);
 	return 0;
 }
