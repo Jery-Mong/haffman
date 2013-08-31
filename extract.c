@@ -114,7 +114,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	char *out_path = (char *)malloc(strlen(argv[1]));
+	char *out_path = (char *)malloc(strlen(argv[1]) + 4);
         strcpy(out_path, argv[1]);
 	strcpy(strrchr(out_path, '.') + 1, "txt");
 

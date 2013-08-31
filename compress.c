@@ -175,7 +175,7 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
-	char *path = (char *)malloc(strlen(argv[1]));
+	char *path = (char *)malloc(strlen(argv[1]) + 4);
 	strcpy(path, argv[1]);
 	char *t = strrchr(path, '.');
 	strcpy(t+1, "huf");
