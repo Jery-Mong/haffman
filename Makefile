@@ -1,7 +1,7 @@
 cprs=compress.c list.c
 etr=extract.c
 
-CFLAGS=-Wall
+CFLAGS=-Wall -g
 
 all:compress extract
 

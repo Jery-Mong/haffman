@@ -5,10 +5,10 @@
 #include "list.h"
 
 /**
- *in each item,
- *higher 24 bits store corresponding code, lower 8 bits store the code's level;
+ * (128bits / 8) + 1 level-byte = 17 bytes
+ * and there is 128 chars in ascii
  */
-int map_table[128];
+char *map_tb[128];
 
 #define BUF_SIZE 1024
 
@@ -69,25 +69,51 @@ struct tree_node *list_to_tree(list_t *lst)
 	
 	return tn1;
 }
-void __tree_to_map_table(struct tree_node *parent, int level, int code)
+
+void __tree_to_map_tb(struct tree_node *parent, char *code)
 {
-	
+/*	
 	if (parent->lchild == NULL  && parent->rchild == NULL) {
 		int ch = ((struct element *)(parent->data))->ch;
-		map_table[ch] |= level & 0xff;
-		map_table[ch] |= code & 0xffffff00;
+		map_tb[ch] |= level & 0xff;
+		map_tb[ch] |= code & 0xffffff00;
 		return;
-	}		
-	/* parent would nerver have only one child */
-	__tree_to_map_table(parent->lchild, level + 1, code | (1 << (31 - level)));
-	__tree_to_map_table(parent->rchild, level + 1, code);
+	}
+*/
+	if (parent->lchild == NULL && parent->rchild == NULL)  {
+		int ch = ((struct element *)(parent->data))->ch;
+		map_tb[ch] = code;
+		return;
+	}
+
+	int level = code[0];
+
+	char *lcode = (char *)malloc(17);
+	char *rcode = (char *)malloc(17);
+	free(code);
+
+	memcpy(lcode, code, 17);
+	memcpy(rcode, code, 17);
 	
+	rcode[level / 8 + 1] |=1 << (level % 8);
+	rcode[0] = level + 1;
+	lcode[0] = level + 1;
+	
+	
+	__tree_to_map_tb(parent->lchild, lcode);
+	__tree_to_map_tb(parent->rchild, rcode);
 }
 
-void tree_to_map_table(struct tree_node *root)
+void tree_to_map_tb(struct tree_node *root)
 {
-	__tree_to_map_table(root, 0, 0);
+	memset(map_tb, 0, 128);
+	
+	char *code = (char *)malloc(17);
+	memset(code, 0, 17);
+	
+	__tree_to_map_tb(root, code);
 }
+
 list_t *weight_tb_to_list(int *weight_tb)
 {
 	int i;
@@ -146,14 +172,15 @@ int hfm_compress(FILE *infp, FILE *outfp)
 		if ((ch = fgetc(infp)) == EOF)
 			ch = '\0';
 		
-		int code = map_table[ch] & 0xffffff00;
-		int level = (char)(map_table[ch] & 0xff);
+		char *code = map_tb[ch];
+		int level = code[0];
 		
+		//code++;		
 		for (i = 0; i < level; i++) {
-			if (code & (1 << (31 - i)))
+			if (code[i / 8] & (1 << (i % 8)))
 				buf[cnt / 8] |= 1 << (cnt % 8);
-			cnt++;
 			
+			cnt++;
 			if (cnt == BUF_SIZE * 8) {
 				fwrite(buf, BUF_SIZE, 1, outfp);
 				cnt = 0;
@@ -166,7 +193,32 @@ int hfm_compress(FILE *infp, FILE *outfp)
 	
 	return 0;
 }
-
+void map_tb_to_file(FILE *outfp)
+{
+	int cnt;
+	int i, j, k = 0;
+	char buf[512];
+	
+	for (i = 0; i < 128; i++) {
+		if (map_tb[i] == (void *)0) {
+			buf[k++] = 0;
+			printf("0");
+			continue;
+		}
+		
+		if (map_tb[i][0] % 8)
+			cnt = map_tb[i][0] / 8 + 2;
+		else
+			cnt = map_tb[i][0] / 8 +  1;
+		
+		for (j = 0; j < cnt; j++) {
+			printf("%x ")
+			buf[k++] = map_tb[i][j];
+		} 
+	}
+	printf("\n%d\n", k);
+	fwrite(buf, k, 1, outfp);
+}
 int main(int argc, char **argv)
 {
 	FILE *infp = fopen(argv[1], "r");
@@ -184,11 +236,10 @@ int main(int argc, char **argv)
 	list_t *lst = weight_tb_to_list(weight_tb);
 	
 	struct tree_node *root = list_to_tree(lst);
-	tree_to_map_table(root);
-	
+	tree_to_map_tb(root);
 	
 	FILE *outfp = fopen(path, "w+");
-	fwrite(map_table, sizeof(map_table), 1, outfp);
+	map_tb_to_file(outfp);
 	
 	fseek(infp, 0, SEEK_SET);
 	hfm_compress(infp, outfp);
