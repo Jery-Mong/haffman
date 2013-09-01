@@ -90,12 +90,12 @@ void __tree_to_map_tb(struct tree_node *parent, char *code)
 
 	char *lcode = (char *)malloc(17);
 	char *rcode = (char *)malloc(17);
-	free(code);
 
 	memcpy(lcode, code, 17);
 	memcpy(rcode, code, 17);
+	free(code);
 	
-	rcode[level / 8 + 1] |=1 << (level % 8);
+	rcode[level / 8 + 1] |= 1 << (level % 8);
 	rcode[0] = level + 1;
 	lcode[0] = level + 1;
 	
@@ -175,7 +175,7 @@ int hfm_compress(FILE *infp, FILE *outfp)
 		char *code = map_tb[ch];
 		int level = code[0];
 		
-		//code++;		
+		code++;		
 		for (i = 0; i < level; i++) {
 			if (code[i / 8] & (1 << (i % 8)))
 				buf[cnt / 8] |= 1 << (cnt % 8);
@@ -195,10 +195,10 @@ int hfm_compress(FILE *infp, FILE *outfp)
 }
 void map_tb_to_file(FILE *outfp)
 {
-	int cnt;
 	int i, j, k = 0;
 	char buf[512];
-	
+	memset(buf, 0, 512);
+/*	
 	for (i = 0; i < 128; i++) {
 		if (map_tb[i] == (void *)0) {
 			buf[k++] = 0;
@@ -216,8 +216,20 @@ void map_tb_to_file(FILE *outfp)
 			buf[k++] = map_tb[i][j];
 		} 
 	}
-	printf("\n%d\n", k);
-	fwrite(buf, k, 1, outfp);
+*/
+	for (i = 0; i < 128; i++) {
+		if (map_tb[i] == (void *)0) {
+			k += 8;
+			continue;
+		}
+		for (j = 0; j < map_tb[i][0] + 8; j++) {
+			if (map_tb[i][j / 8] & (1 << (j % 8)))
+				buf[k / 8] |= 1 << (k % 8);
+			k++;
+		}
+	}
+	printf("%d\n", k);
+	fwrite(buf, 1, (k % 8) ? (k / 8 + 1) : (k / 8), outfp);
 }
 int main(int argc, char **argv)
 {
