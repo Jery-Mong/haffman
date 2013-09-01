@@ -49,7 +49,6 @@ int find_min_level()
 		if (map_tb[i] != (void *)0) {
 			if (map_tb[i][0] < min)
 				min = map_tb[i][0];
-			
 		}
 	}
 	return min;
@@ -109,7 +108,6 @@ void read_map_tb(FILE *infp)
 				level |= 1 << j;
 			k++;
 		}
-
 		if (level == 0)
 			continue;
 				

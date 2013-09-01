@@ -72,14 +72,6 @@ struct tree_node *list_to_tree(list_t *lst)
 
 void __tree_to_map_tb(struct tree_node *parent, char *code)
 {
-/*	
-	if (parent->lchild == NULL  && parent->rchild == NULL) {
-		int ch = ((struct element *)(parent->data))->ch;
-		map_tb[ch] |= level & 0xff;
-		map_tb[ch] |= code & 0xffffff00;
-		return;
-	}
-*/
 	if (parent->lchild == NULL && parent->rchild == NULL)  {
 		int ch = ((struct element *)(parent->data))->ch;
 		map_tb[ch] = code;
@@ -132,8 +124,7 @@ list_t *weight_tb_to_list(int *weight_tb)
 
 
 		em->weight = weight_tb[i];
-		em->ch     = i;
-
+		em->ch = i;
 		
 		tn->data = (void *)em;
 		tn->lchild = NULL;
@@ -198,25 +189,7 @@ void map_tb_to_file(FILE *outfp)
 	int i, j, k = 0;
 	char buf[512];
 	memset(buf, 0, 512);
-/*	
-	for (i = 0; i < 128; i++) {
-		if (map_tb[i] == (void *)0) {
-			buf[k++] = 0;
-			printf("0");
-			continue;
-		}
-		
-		if (map_tb[i][0] % 8)
-			cnt = map_tb[i][0] / 8 + 2;
-		else
-			cnt = map_tb[i][0] / 8 +  1;
-		
-		for (j = 0; j < cnt; j++) {
-			printf("%x ")
-			buf[k++] = map_tb[i][j];
-		} 
-	}
-*/
+	
 	for (i = 0; i < 128; i++) {
 		if (map_tb[i] == (void *)0) {
 			k += 8;
@@ -228,7 +201,6 @@ void map_tb_to_file(FILE *outfp)
 			k++;
 		}
 	}
-	printf("%d\n", k);
 	fwrite(buf, 1, (k % 8) ? (k / 8 + 1) : (k / 8), outfp);
 }
 int main(int argc, char **argv)
@@ -255,7 +227,12 @@ int main(int argc, char **argv)
 	
 	fseek(infp, 0, SEEK_SET);
 	hfm_compress(infp, outfp);
-	
+
+	int i;
+	for (i = 0; i < 128; i++) {
+		if (map_tb[i] != 0)
+			free(map_tb[i]);
+	}
 	fclose(infp);
 	fclose(outfp);
 	free(path);
