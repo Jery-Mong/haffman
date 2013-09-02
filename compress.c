@@ -181,7 +181,6 @@ int hfm_compress(FILE *infp, FILE *outfp)
 	} while(ch != '\0');
 	
 	fwrite(buf, cnt / 8 + 1, 1, outfp);
-	
 	return 0;
 }
 void map_tb_to_file(FILE *outfp)
